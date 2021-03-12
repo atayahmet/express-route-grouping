@@ -1,0 +1,11 @@
+{
+  "commitUrlFormat": "{{host}}/{{owner}}/{{repository}}/commits/{{hash}}",
+  "compareUrlFormat": "{{host}}/{{owner}}/{{repository}}/compare/{{previousTag}}..{{currentTag}}",
+  "bumpFiles": [
+    {
+      "filename": "./package.json",
+      "type": "json"
+    }
+  ],
+  "scripts": {}
+}

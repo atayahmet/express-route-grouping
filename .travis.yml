@@ -1,0 +1,10 @@
+language: node_js
+node_js:
+  - "lts/*"
+dist: trusty
+sudo: required
+
+install:
+  - npm install
+
+after_success: 'npm run coveralls'

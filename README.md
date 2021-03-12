@@ -1,0 +1,3 @@
+# express-route-grouping
+
+[![NPM version](https://img.shields.io/npm/v/express-route-grouping.svg)](https://www.npmjs.com/package/express-route-grouping) [![Build Status](https://travis-ci.org/atayahmet/express-route-grouping.svg?branch=main)](https://travis-ci.org/atayahmet/express-route-grouping) [![Coverage Status](https://coveralls.io/repos/github/atayahmet/express-route-grouping/badge.svg?branch=main)](https://coveralls.io/github/atayahmet/express-route-grouping?branch=main) [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org) [![Standard Version](https://img.shields.io/badge/release-standard%20version-brightgreen.svg)](https://github.com/conventional-changelog/standard-version)
