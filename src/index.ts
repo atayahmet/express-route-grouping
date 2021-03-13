@@ -1,11 +1,12 @@
 import { IRouter } from 'express';
+import pluralize from 'pluralize';
 import { RequestMethods, ResourceOptions, Resources } from './types';
 import RESOURCES from './resources';
 
 type GroupCallback = (router: RouteGroup) => void;
 
 class RouteGroup {
-  private head: string | undefined;
+  private head: string;
 
   constructor(path: string = '/') {
     this.head = path;
@@ -27,18 +28,12 @@ class RouteGroup {
       throw new Error('Resource handlers are required!');
     }
 
-    const {
-      excludes = [],
-      handlers = {},
-      beforeHandlers = [],
-      afterHandlers = [],
-    } = options;
+    const { handlers = {}, beforeHandlers = [], afterHandlers = [] } = options;
     Object.keys(RESOURCES).forEach((name: string) => {
-      if (excludes.includes(name as Resources)) return;
-
       const { method, suffix } = RESOURCES[name];
       const requestRouter = router[method as RequestMethods];
-      const fullPath = this.to(suffix);
+
+      const fullPath = this.to(suffix ? this.getPlaceholder() : '/');
       const handler = handlers[name as Resources] as any;
 
       if (handler) {
@@ -63,6 +58,11 @@ class RouteGroup {
     if (this.head !== '/') newPath = newPath.padStart(newPath.length + 1, '/');
 
     return newPath;
+  }
+
+  private getPlaceholder() {
+    const namespace = this.head.split('/').pop() || '';
+    return `:${pluralize.singular(namespace)}Id`;
   }
 }
 

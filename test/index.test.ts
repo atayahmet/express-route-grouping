@@ -228,7 +228,9 @@ describe('Route Group Tests', () => {
         expect(routeIndex).not.toEqual(undefined);
 
         const routeFind = router.stack.find(({ route }) => {
-          return route.path === '/products/:id' && route.methods.get === true;
+          return (
+            route.path === '/products/:productId' && route.methods.get === true
+          );
         });
         expect(routeFind).not.toEqual(undefined);
 
@@ -238,19 +240,25 @@ describe('Route Group Tests', () => {
         expect(routeCreate).not.toEqual(undefined);
 
         const routeUpdate = router.stack.find(({ route }) => {
-          return route.path === '/products/:id' && route.methods.put === true;
+          return (
+            route.path === '/products/:productId' && route.methods.put === true
+          );
         });
         expect(routeUpdate).not.toEqual(undefined);
 
         const routeDelete = router.stack.find(({ route }) => {
           return (
-            route.path === '/products/:id' && route.methods.delete === true
+            route.path === '/products/:productId' &&
+            route.methods.delete === true
           );
         });
         expect(routeDelete).not.toEqual(undefined);
 
         const routePatch = router.stack.find(({ route }) => {
-          return route.path === '/products/:id' && route.methods.patch === true;
+          return (
+            route.path === '/products/:productId' &&
+            route.methods.patch === true
+          );
         });
         expect(routePatch).not.toEqual(undefined);
       });
@@ -262,7 +270,7 @@ describe('Route Group Tests', () => {
 
       group('products', ({ group }) => {
         group('orders', ({ resource }) => {
-          resource(router, { handlers: { index: () => {} } });
+          resource(router, { handlers: { index: () => {}, find: () => {} } });
 
           const routeIndex = router.stack.find(({ route }) => {
             return (
@@ -273,11 +281,11 @@ describe('Route Group Tests', () => {
 
           const routeFind = router.stack.find(({ route }) => {
             return (
-              route.path === '/products/orders/:id' &&
+              route.path === '/products/orders/:orderId' &&
               route.methods.get === true
             );
           });
-          expect(routeFind).not.toBeTruthy();
+          expect(routeFind).toBeTruthy();
 
           const routeCreate = router.stack.find(({ route }) => {
             return (
@@ -295,8 +303,7 @@ describe('Route Group Tests', () => {
 
       group('products', ({ resource }) => {
         resource(router, {
-          excludes: ['index'],
-          handlers: { index: () => {}, create: () => {} },
+          handlers: { create: () => {} },
         });
 
         const routeCreate = router.stack.find(({ route }) => {
