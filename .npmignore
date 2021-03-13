@@ -1,0 +1,6 @@
+src
+test
+node_modules
+tsconfig.json
+.prettierrc.js
+.travis.yml
