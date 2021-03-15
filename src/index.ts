@@ -62,7 +62,8 @@ class RouteGroup {
 
   private getPlaceholder() {
     const namespace = this.head.split('/').pop() || '';
-    return `:${pluralize.singular(namespace)}Id`;
+    const prefix = pluralize.singular(namespace);
+    return `:${prefix ? `${prefix}Id` : 'id'}`;
   }
 }
 
