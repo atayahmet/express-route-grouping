@@ -28,29 +28,26 @@ const app = express();
 const router = express.Router();
 const { group } = new RouteGroup();
 
-group('blogs', $blogs => {
-  // -> (/blogs)
-  router.get($blogs.to('/'), () => {});
+group('blogs', blogs => {
+  router.get(blogs.to('/'), () => {
+    // -> (/blogs)
+  });
 
-  $blogs.group(':blogId', $blog => {
-    // -> (/blogs/:blogId)
-    router.get($blog.to('/'), (req, res) => {
-      // ...
+  blogs.group(':blogId', blog => {
+    router.get(blog.to('/'), (req, res) => {
+      // -> (/blogs/:blogId)
     });
 
-    // -> (POST: /blogs/:blogId)
-    router.post($blog.to('/'), (req, res) => {
-      // ...
+    router.post(blog.to('/'), (req, res) => {
+      // -> (POST: /blogs/:blogId)
     });
 
-    // -> (/blogs/:blogId/comments)
-    router.get($blog.to('comments'), (req, res) => {
-      // ...
+    router.get(blog.to('comments'), (req, res) => {
+      // -> (/blogs/:blogId/comments)
     });
 
-    // -> (/blogs/:blogId/likes)
-    router.get($blog.to('likes'), (req, res) => {
-      // ...
+    router.get(blog.to('likes'), (req, res) => {
+      // -> (/blogs/:blogId/likes)
     });
   });
 });
@@ -67,67 +64,82 @@ Resource api modeling is a approach to standarts some generic http operations.
 Let's see the examples:
 
 ```ts
-import express from 'express';
+import { Router } from 'express';
 import RouteGroup from 'express-route-grouping';
 
-const router = express.Router();
+const router = Router();
 const { group } = new RouteGroup();
 
-group('products', $products => {
-  $products.resource(router, {
+group('products', products => {
+  products.resource(router, {
     handlers: {
-      // -> (GET: /products)
-      index(req, res) => {
-        // ...
+      index(req, res) {
+        // -> (GET: /products)
       },
-      // -> (GET: /products/:productId)
-      find(req, res) => {
-        // ...
+
+      find(req, res) {
+        // -> (GET: /products/:productId)
       },
-      // -> (POST: /products)
-      create(req, res) => {
-        // ...
+
+      create(req, res) {
+        // -> (POST: /products)
       },
-      // -> (PUT: /products/:productId)
-      update(req, res) => {
-        // ...
+
+      update(req, res) {
+        // -> (PUT: /products/:productId)
       },
-      // -> (PATCH: /products/:productId)
-      patch(req, res) => {
-        // ...
+
+      patch(req, res) {
+        // -> (PATCH: /products/:productId)
       },
-      // -> (DELETE: /products/:productId)
-      delete(req, res) => {
-        // ...
-      }
+
+      delete(req, res) {
+        // -> (DELETE: /products/:productId)
+      },
     },
   });
 });
 ```
 
-You can also exclude some resources:
+You can also set a class instance including resource methods.
 
 ```ts
-group('products', $products => {
-  $products.resource(router, {
-    excludes: ['update', 'patch', 'delete'],
-    handlers: {
-      // -> (GET: /products)
-      index(req, res) => {
-        // ...
-      },
-      // -> (GET: /products/:productId)
-      find(req, res) => {
-        // ...
-      },
-      // -> (POST: /products)
-      create(req, res) => {
-        // ...
-      }
-    },
+class BlogController {
+  index = (req, res) => {
+    // -> index: (GET: /products)
+  };
+
+  find = (req, res) => {
+    // -> find: (GET: /products/:productId)
+  };
+
+  create = (req, res) => {
+    // -> create: (POST: /products)
+  };
+
+  update = (req, res) => {
+    // -> update: (PUT: /products/:productId)
+  };
+
+  patch = (req, res) => {
+    // -> patch: (PATCH: /products/:productId)
+  };
+
+  delete = (req, res) => {
+    // -> delete: (DELETE: /products/:productId)
+  };
+}
+```
+
+```ts
+group('products', ({ resource }) => {
+  resource(router, {
+    handlers: new BlogController(),
   });
 });
 ```
+
+> **Note**: You don't have to add all methods to handlers. It will consider only the defined ones.
 
 ### Resource Options
 
@@ -140,35 +152,33 @@ group('products', $products => {
 ### Nested Resource Model
 
 ```ts
-import express from 'express';
+import { Router } from 'express';
 import RouteGroup from 'express-route-grouping';
 
-const router = express.Router();
+const router = Router();
 const { group } = new RouteGroup();
 
-group('products', $products => {
-  // -> index: (GET: /products)
-  // -> find: (GET: /products/:productId)
-  // -> create: (POST: /products)
-  // -> update: (PUT: /products/:productId)
-  // -> patch: (PATCH: /products/:productId)
-  // -> delete: (DELETE: /products/:productId)
-  $products.resource(router, {
+group('products', products => {
+  products.resource(router, {
     handlers: {
-      // ...
+      // -> index: (GET: /products)
+      // -> find: (GET: /products/:productId)
+      // -> create: (POST: /products)
+      // -> update: (PUT: /products/:productId)
+      // -> patch: (PATCH: /products/:productId)
+      // -> delete: (DELETE: /products/:productId)
     },
   });
 
-  $products.group(':productId/items', $items => {
-    // -> index: (GET: /products/:productId/items)
-    // -> find: (GET: /products/:productId/items/:itemId)
-    // -> create: (POST: /products/:productId/items)
-    // -> update: (PUT: /products/:productId/items/:itemId)
-    // -> patch: (PATCH: /products/:productId/items/:itemId)
-    // -> delete: (DELETE: /products/:productId/items/:itemId)
-    $items.resource(router, {
+  products.group('items', items => {
+    items.resource(router, {
       handlers: {
-        // ...
+        // -> index: (GET: /products/:productId/items)
+        // -> find: (GET: /products/:productId/items/:itemId)
+        // -> create: (POST: /products/:productId/items)
+        // -> update: (PUT: /products/:productId/items/:itemId)
+        // -> patch: (PATCH: /products/:productId/items/:itemId)
+        // -> delete: (DELETE: /products/:productId/items/:itemId)
       },
     });
   });

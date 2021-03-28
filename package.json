@@ -35,7 +35,16 @@
     "trailingComma": "es5"
   },
   "name": "express-route-grouping",
+  "description": "Easy route grouping for Express JS with resource api model.",
   "author": "Ahmet ATAY",
+  "keywords": [
+    "express",
+    "route",
+    "group",
+    "end-point",
+    "resource",
+    "api"
+  ],
   "module": "dist/express-route-grouping.esm.js",
   "size-limit": [
     {
