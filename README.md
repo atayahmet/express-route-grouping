@@ -21,38 +21,42 @@ $ yarn add express-route-grouping
 ## Basic Usage
 
 ```ts
-import express from 'express';
+import { Router } from 'express';
 import RouteGroup from 'express-route-grouping';
 
-const app = express();
-const router = express.Router();
+const router = Router();
 const { group } = new RouteGroup();
 
 group('blogs', blogs => {
+  
+  // -> /blogs
   router.get(blogs.to('/'), () => {
-    // -> (/blogs)
+
   });
 
   blogs.group(':blogId', blog => {
+
+    // -> /blogs/:blogId
     router.get(blog.to('/'), (req, res) => {
-      // -> (/blogs/:blogId)
+
     });
 
+    // -> /blogs/:blogId
     router.post(blog.to('/'), (req, res) => {
-      // -> (POST: /blogs/:blogId)
+
     });
 
+    // -> /blogs/:blogId/comments
     router.get(blog.to('comments'), (req, res) => {
-      // -> (/blogs/:blogId/comments)
+
     });
 
+    // -> /blogs/:blogId/likes
     router.get(blog.to('likes'), (req, res) => {
-      // -> (/blogs/:blogId/likes)
+
     });
   });
 });
-
-app.use('/', router);
 ```
 
 > **Not:** You can nest all routes unlimitedly as above.
@@ -73,28 +77,34 @@ const { group } = new RouteGroup();
 group('products', products => {
   products.resource(router, {
     handlers: {
+      // GET: /products
       index(req, res) {
-        // -> (GET: /products)
+
       },
 
+      // GET: /products/:productId
       find(req, res) {
-        // -> (GET: /products/:productId)
+
       },
 
+      // POST: /products
       create(req, res) {
-        // -> (POST: /products)
+
       },
 
+      // PUT: /products/:productId
       update(req, res) {
-        // -> (PUT: /products/:productId)
+
       },
 
+      // PATCH: /products/:productId
       patch(req, res) {
-        // -> (PATCH: /products/:productId)
+
       },
 
+      // DELETE: /products/:productId
       delete(req, res) {
-        // -> (DELETE: /products/:productId)
+
       },
     },
   });
@@ -105,28 +115,35 @@ You can also set a class instance including resource methods.
 
 ```ts
 class BlogController {
+
+  // GET: /products
   index = (req, res) => {
-    // -> index: (GET: /products)
+
   };
 
+  // GET: /products/:productId
   find = (req, res) => {
-    // -> find: (GET: /products/:productId)
+
   };
 
+  // POST: /products
   create = (req, res) => {
-    // -> create: (POST: /products)
+
   };
 
+  // PUT: /products/:productId
   update = (req, res) => {
-    // -> update: (PUT: /products/:productId)
+
   };
 
+  // PATCH: /products/:productId
   patch = (req, res) => {
-    // -> patch: (PATCH: /products/:productId)
+
   };
 
+  // DELETE: /products/:productId
   delete = (req, res) => {
-    // -> delete: (DELETE: /products/:productId)
+
   };
 }
 ```
