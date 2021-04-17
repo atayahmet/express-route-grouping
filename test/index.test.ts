@@ -4,65 +4,118 @@ import RouteGroup from '../src';
 describe('Route Group Tests', () => {
   describe('Grouping variants', () => {
     test('in one level', () => {
-      const { group } = new RouteGroup();
-      group('base', ({ to }) => {
-        expect(to('/')).toEqual('/base');
-        expect(to('/:id')).toEqual('/base/:id');
+      const root = new RouteGroup('/', express.Router());
+      root.group('/base', base => {
+        base.get('/', () => null);
+        base.get('/:id', () => null);
+        const router = base.export();
+        expect(router.stack[0].route.path).toEqual('/base');
+        expect(router.stack[1].route.path).toEqual('/base/:id');
       });
 
-      group('/', ({ to }) => {
-        expect(to('/list')).toEqual('/list');
+      root.group('/', base2 => {
+        base2.get('/list', () => null);
+        const router = base2.export();
+        expect(router.stack[2].route.path).toEqual('/list');
       });
     });
 
     test('in two levels', () => {
-      const { group } = new RouteGroup();
-      group('base', ({ to, group }) => {
-        expect(to('/')).toEqual('/base');
+      const { group } = new RouteGroup('/', express.Router());
+      group('base', base => {
+        base.get('/', () => null);
+        const router = base.export();
+        expect(router.stack[0].route.path).toEqual('/base');
 
-        group('/content/:id', ({ to }) => {
-          expect(to('/create')).toEqual('/base/content/:id/create');
-          expect(to('/delete/one')).toEqual('/base/content/:id/delete/one');
+        base.group('/content/:id', content => {
+          content.post('/create', () => null);
+          content.delete('/delete/one', () => null);
+          const router = content.export();
+          expect(router.stack[1].route.path).toEqual(
+            '/base/content/:id/create'
+          );
+          expect(router.stack[2].route.path).toEqual(
+            '/base/content/:id/delete/one'
+          );
         });
       });
     });
 
     test('in three levels', () => {
-      const { group } = new RouteGroup();
-      group('base', ({ to, group }) => {
-        expect(to('/')).toEqual('/base');
+      const { group } = new RouteGroup('/', express.Router());
+      group('base', base => {
+        base.get('/', () => null);
+        const router = base.export();
 
-        group('/content/:id', ({ to, group }) => {
-          expect(to('/create')).toEqual('/base/content/:id/create');
-          expect(to('/delete/one')).toEqual('/base/content/:id/delete/one');
+        expect(router.stack[0].route.path).toEqual('/base');
 
-          group('/tags', ({ to }) => {
-            expect(to('/')).toEqual('/base/content/:id/tags');
-            expect(to('/:id')).toEqual('/base/content/:id/tags/:id');
+        base.group('/content/:id', content => {
+          content.post('/create', () => null);
+          content.delete('/delete/one', () => null);
+
+          expect(router.stack[1].route.path).toEqual(
+            '/base/content/:id/create'
+          );
+          expect(router.stack[2].route.path).toEqual(
+            '/base/content/:id/delete/one'
+          );
+
+          content.group('/tags', tags => {
+            tags.get('/', () => null);
+            tags.get('/:id', () => null);
+            expect(router.stack[3].route.path).toEqual(
+              '/base/content/:id/tags'
+            );
+            expect(router.stack[4].route.path).toEqual(
+              '/base/content/:id/tags/:id'
+            );
           });
         });
       });
     });
 
     test('in four levels', () => {
-      const { group } = new RouteGroup();
-      group('base', ({ to, group }) => {
-        expect(to('/')).toEqual('/base');
+      const { group } = new RouteGroup('/', express.Router());
+      group('base', base => {
+        base.get('/', () => null);
+        const router = base.export();
 
-        group('/content/:id', ({ to, group }) => {
-          expect(to('/create')).toEqual('/base/content/:id/create');
-          expect(to('/delete/one')).toEqual('/base/content/:id/delete/one');
+        expect(router.stack[0].route.path).toEqual('/base');
 
-          group('/tags', ({ to, group }) => {
-            expect(to('/')).toEqual('/base/content/:id/tags');
-            expect(to('/:id')).toEqual('/base/content/:id/tags/:id');
+        base.group('/content/:id', content => {
+          content.post('/create', () => null);
+          content.delete('/delete/one', () => null);
 
-            group('/tags', ({ to }) => {
-              expect(to('/add')).toEqual('/base/content/:id/tags/tags/add');
-              expect(to('/edit/:id')).toEqual(
+          expect(router.stack[1].route.path).toEqual(
+            '/base/content/:id/create'
+          );
+          expect(router.stack[2].route.path).toEqual(
+            '/base/content/:id/delete/one'
+          );
+
+          content.group('/tags', tags => {
+            tags.get('/', () => null);
+            tags.get('/:id', () => null);
+
+            expect(router.stack[3].route.path).toEqual(
+              '/base/content/:id/tags'
+            );
+            expect(router.stack[4].route.path).toEqual(
+              '/base/content/:id/tags/:id'
+            );
+
+            tags.group('/tags', tags2 => {
+              tags2.post('/add', () => null);
+              tags2.put('/edit/:id', () => null);
+              tags2.delete('/delete/:id', () => null);
+
+              expect(router.stack[5].route.path).toEqual(
+                '/base/content/:id/tags/tags/add'
+              );
+              expect(router.stack[6].route.path).toEqual(
                 '/base/content/:id/tags/tags/edit/:id'
               );
-              expect(to('/delete/:id')).toEqual(
+              expect(router.stack[7].route.path).toEqual(
                 '/base/content/:id/tags/tags/delete/:id'
               );
             });
@@ -72,30 +125,58 @@ describe('Route Group Tests', () => {
     });
 
     test('in five levels', () => {
-      const { group } = new RouteGroup();
-      group('base', ({ to, group }) => {
-        expect(to('/')).toEqual('/base');
+      const { group } = new RouteGroup('/', express.Router());
+      group('base', base => {
+        base.get('/', () => null);
+        const router = base.export();
 
-        group('/content/:id', ({ to, group }) => {
-          expect(to('/create')).toEqual('/base/content/:id/create');
-          expect(to('/delete/one')).toEqual('/base/content/:id/delete/one');
+        expect(router.stack[0].route.path).toEqual('/base');
 
-          group('/tags', ({ to, group }) => {
-            expect(to('/')).toEqual('/base/content/:id/tags');
-            expect(to('/:id')).toEqual('/base/content/:id/tags/:id');
+        base.group('/content/:id', content => {
+          content.post('/create', () => null);
+          content.post('/delete/one', () => null);
 
-            group('/tags', ({ to, group }) => {
-              expect(to('/add')).toEqual('/base/content/:id/tags/tags/add');
-              expect(to('/edit/:id')).toEqual(
+          expect(router.stack[1].route.path).toEqual(
+            '/base/content/:id/create'
+          );
+          expect(router.stack[2].route.path).toEqual(
+            '/base/content/:id/delete/one'
+          );
+
+          content.group('/tags', tags => {
+            tags.get('/', () => null);
+            tags.get('/:id', () => null);
+
+            expect(router.stack[3].route.path).toEqual(
+              '/base/content/:id/tags'
+            );
+            expect(router.stack[4].route.path).toEqual(
+              '/base/content/:id/tags/:id'
+            );
+
+            tags.group('/tags', tags2 => {
+              tags2.post('/add', () => null);
+              tags2.patch('/edit/:id', () => null);
+              tags2.delete('/delete/:id', () => null);
+
+              expect(router.stack[5].route.path).toEqual(
+                '/base/content/:id/tags/tags/add'
+              );
+              expect(router.stack[6].route.path).toEqual(
                 '/base/content/:id/tags/tags/edit/:id'
               );
-              expect(to('/delete/:id')).toEqual(
+              expect(router.stack[7].route.path).toEqual(
                 '/base/content/:id/tags/tags/delete/:id'
               );
 
-              group('/products', ({ to }) => {
-                expect(to('/')).toEqual('/base/content/:id/tags/tags/products');
-                expect(to('/:id')).toEqual(
+              tags2.group('/products', products => {
+                products.get('/', () => null);
+                products.get('/:id', () => null);
+
+                expect(router.stack[8].route.path).toEqual(
+                  '/base/content/:id/tags/tags/products'
+                );
+                expect(router.stack[9].route.path).toEqual(
                   '/base/content/:id/tags/tags/products/:id'
                 );
               });
@@ -108,31 +189,52 @@ describe('Route Group Tests', () => {
 
   describe('grouping multiple different path', () => {
     test('in one level', () => {
-      const { group } = new RouteGroup();
-      group('base', ({ group, to }) => {
-        expect(to('/')).toEqual('/base');
+      const { group } = new RouteGroup('/', express.Router());
+      group('base', base => {
+        base.get('/', () => null);
+        const router = base.export();
 
-        group('/content/:id', ({ to }) => {
-          expect(to('/create')).toEqual('/base/content/:id/create');
-          expect(to('/delete/one')).toEqual('/base/content/:id/delete/one');
+        expect(router.stack[0].route.path).toEqual('/base');
+
+        base.group('/content/:id', content => {
+          content.post('/create', () => null);
+          content.delete('/delete/one', () => null);
+          expect(router.stack[1].route.path).toEqual(
+            '/base/content/:id/create'
+          );
+          expect(router.stack[2].route.path).toEqual(
+            '/base/content/:id/delete/one'
+          );
         });
 
-        group('/content/tags', ({ to }) => {
-          expect(to('/')).toEqual('/base/content/tags');
-          expect(to('/:id')).toEqual('/base/content/tags/:id');
+        base.group('/content/tags', tags => {
+          tags.get('/', () => null);
+          tags.get('/:id', () => null);
+          expect(router.stack[3].route.path).toEqual('/base/content/tags');
+          expect(router.stack[4].route.path).toEqual('/base/content/tags/:id');
         });
 
-        group('/content/tags/products', ({ to, group }) => {
-          expect(to('/')).toEqual('/base/content/tags/products');
-          expect(to('/:id')).toEqual('/base/content/tags/products/:id');
+        base.group('/content/tags/products', products => {
+          products.get('/', () => null);
+          products.get('/:id', () => null);
+          expect(router.stack[5].route.path).toEqual(
+            '/base/content/tags/products'
+          );
+          expect(router.stack[6].route.path).toEqual(
+            '/base/content/tags/products/:id'
+          );
 
-          group('/level-2', ({ to }) => {
-            expect(to('/')).toEqual('/base/content/tags/products/level-2');
+          products.group('/level-2', level2 => {
+            level2.get('/', () => null);
+            expect(router.stack[7].route.path).toEqual(
+              '/base/content/tags/products/level-2'
+            );
           });
         });
 
-        group('/content/level-1', ({ to }) => {
-          expect(to('/')).toEqual('/base/content/level-1');
+        base.group('/content/level-1', level1 => {
+          level1.get('/', () => null);
+          expect(router.stack[8].route.path).toEqual('/base/content/level-1');
         });
       });
     });
@@ -140,27 +242,57 @@ describe('Route Group Tests', () => {
 
   describe('grouping path style variants', () => {
     it('two level group', () => {
-      const { group } = new RouteGroup();
+      const { group } = new RouteGroup('/', express.Router());
 
-      group('/base', ({ group }) => {
-        group('level1', ({ to }) => {
-          expect(to('/')).toEqual('/base/level1');
+      group('/base', base => {
+        const router = base.export();
+
+        base.group('level1', level1 => {
+          level1.get('/', () => null);
+          expect(router.stack[0].route.path).toEqual('/base/level1');
         });
 
-        group('/level1/:levelId', ({ to }) => {
-          expect(to('/add')).toEqual('/base/level1/:levelId/add');
+        base.group('/level1/:levelId', level1LevelId => {
+          level1LevelId.post('/add');
+          expect(router.stack[1].route.path).toEqual(
+            '/base/level1/:levelId/add'
+          );
         });
 
-        group('level-1/:levelId/:uid', ({ to }) => {
-          expect(to('/add')).toEqual('/base/level-1/:levelId/:uid/add');
+        base.group('level-1/:levelId/:uid', level1LevelIdUid => {
+          level1LevelIdUid.post('/add', () => null);
+          expect(router.stack[2].route.path).toEqual(
+            '/base/level-1/:levelId/:uid/add'
+          );
         });
 
-        group('level-1/:levelId/:uid/als', ({ to }) => {
-          expect(to('/add-2')).toEqual('/base/level-1/:levelId/:uid/als/add-2');
+        base.group('level-1/:levelId/:uid/als', level1LevelIdUidAls => {
+          level1LevelIdUidAls.post('/add-2', () => null);
+          expect(router.stack[3].route.path).toEqual(
+            '/base/level-1/:levelId/:uid/als/add-2'
+          );
         });
 
-        group('level-1/:levelId', ({ to }) => {
-          expect(to('/add-3')).toEqual('/base/level-1/:levelId/add-3');
+        base.group('level-1/:levelId', level1LevelId => {
+          level1LevelId.post('/add-3', () => null);
+          expect(router.stack[4].route.path).toEqual(
+            '/base/level-1/:levelId/add-3'
+          );
+        });
+      });
+    });
+  });
+  describe('asymmetric paths', () => {
+    test('without first slash', () => {
+      const { group } = new RouteGroup('/', express.Router());
+      group('blogs', base => {
+        const router = base.export();
+        base.get(':id', () => null);
+        expect(router.stack[0].route.path).toEqual('/blogs/:id');
+
+        base.group(':id/comments', comments => {
+          comments.get('/', () => null);
+          expect(router.stack[1].route.path).toEqual('/blogs/:id/comments');
         });
       });
     });
@@ -168,36 +300,50 @@ describe('Route Group Tests', () => {
 
   describe('asymmetric groups', () => {
     test('parent group empty', () => {
-      const { group } = new RouteGroup();
-      group('', ({ to }) => {
-        expect(to()).toEqual('/');
+      const { group } = new RouteGroup('/', express.Router());
+
+      group('', base => {
+        const router = base.export();
+        base.get('', () => null);
+        expect(router.stack[0].route.path).toEqual('/');
       });
 
-      group('', ({ group }) => {
-        group('', ({ to }) => {
-          expect(to()).toEqual('/');
+      group('', base => {
+        const router = base.export();
+        base.group('', empty => {
+          empty.get('', () => null);
+          expect(router.stack[1].route.path).toEqual('/');
 
-          group('', ({ to }) => {
-            expect(to('/')).toEqual('/');
+          empty.group('', empty2 => {
+            empty2.get('/', () => null);
+            expect(router.stack[2].route.path).toEqual('/');
           });
         });
       });
     });
 
     test('hash url', () => {
-      const { group } = new RouteGroup();
-      group('products', ({ to }) => {
-        expect(to('#tab-1')).toEqual('/products/#tab-1');
-        expect(to('#tab-2')).toEqual('/products/#tab-2');
+      const { group } = new RouteGroup('/', express.Router());
+      group('products', products => {
+        const router = products.export();
+        products.get('#tab-1', () => null);
+        products.get('#tab-2', () => null);
+        expect(router.stack[0].route.path).toEqual('/products/#tab-1');
+        expect(router.stack[1].route.path).toEqual('/products/#tab-2');
       });
 
-      group('members#books', ({ to, group }) => {
-        expect(to('/')).toEqual('/members#books');
-        expect(to('/sci-fi')).toEqual('/members#books/sci-fi');
+      group('members#books', members => {
+        const router = members.export();
+        members.get('/', () => null);
+        members.get('/sci-fi', () => null);
+        expect(router.stack[2].route.path).toEqual('/members#books');
+        expect(router.stack[3].route.path).toEqual('/members#books/sci-fi');
 
-        group('sci-fi', ({ to }) => {
-          expect(to('/')).toEqual('/members#books/sci-fi');
-          expect(to('/the-martian')).toEqual(
+        members.group('sci-fi', sciFi => {
+          sciFi.get('/', () => null);
+          sciFi.get('/the-martian', () => null);
+          expect(router.stack[4].route.path).toEqual('/members#books/sci-fi');
+          expect(router.stack[5].route.path).toEqual(
             '/members#books/sci-fi/the-martian'
           );
         });
@@ -207,10 +353,10 @@ describe('Route Group Tests', () => {
 
   describe('resource modeling groups', () => {
     test('in one level', () => {
-      const { group } = new RouteGroup();
-      const router = express.Router();
-      group('products', ({ resource }) => {
-        resource(router, {
+      const { group } = new RouteGroup('/', express.Router());
+
+      group('products', products => {
+        products.resource({
           excludes: [],
           handlers: {
             index: () => {},
@@ -222,6 +368,7 @@ describe('Route Group Tests', () => {
           },
         });
 
+        const router = products.export();
         const routeIndex = router.stack.find(({ route }) => {
           return route.path === '/products' && route.methods.get === true;
         });
@@ -265,12 +412,13 @@ describe('Route Group Tests', () => {
     });
 
     test('in two level', () => {
-      const { group } = new RouteGroup();
-      const router = express.Router();
+      const { group } = new RouteGroup('/', express.Router());
 
-      group('products', ({ group }) => {
-        group('orders', ({ resource }) => {
-          resource(router, { handlers: { index: () => {}, find: () => {} } });
+      group('products', products => {
+        const router = products.export();
+
+        products.group('orders', orders => {
+          orders.resource({ handlers: { index: () => {}, find: () => {} } });
 
           const routeIndex = router.stack.find(({ route }) => {
             return (
@@ -298,11 +446,11 @@ describe('Route Group Tests', () => {
     });
 
     it('should excludes methods defined in params', () => {
-      const { group } = new RouteGroup();
-      const router = express.Router();
+      const { group } = new RouteGroup('/', express.Router());
 
-      group('products', ({ resource }) => {
-        resource(router, {
+      group('products', products => {
+        const router = products.export();
+        products.resource({
           handlers: { create: () => {} },
         });
 
@@ -319,22 +467,23 @@ describe('Route Group Tests', () => {
     });
 
     test('add additional methods on resources methods', () => {
-      const { group } = new RouteGroup();
-      const router = express.Router();
+      const { group } = new RouteGroup('/', express.Router());
 
-      group('products', ({ resource, to }) => {
-        resource(router, {
+      group('products', products => {
+        const router = products.export();
+        products.resource({
           handlers: { index: () => {}, create: () => {} },
         });
-        expect(to('/customCreate')).toEqual('/products/customCreate');
+        products.get('/customCreate', () => null);
+        expect(router.stack[2].route.path).toEqual('/products/customCreate');
       });
     });
 
     test('handlers of before/after', () => {
-      const { group } = new RouteGroup();
-      const router = express.Router();
+      const { group } = new RouteGroup('/', express.Router());
 
-      group('products', ({ resource }) => {
+      group('products', products => {
+        const router = products.export();
         function beforeHandler(req: any) {
           console.log('Request: ', req);
         }
@@ -343,7 +492,7 @@ describe('Route Group Tests', () => {
           console.log('Request: ', req);
         }
 
-        resource(router, {
+        products.resource({
           handlers: { index: () => {}, create: () => {} },
           beforeHandlers: [beforeHandler],
           afterHandlers: [afterHandler],
@@ -357,10 +506,10 @@ describe('Route Group Tests', () => {
     });
 
     test('resource specific multiple handlers', () => {
-      const { group } = new RouteGroup();
-      const router = express.Router();
+      const { group } = new RouteGroup('/', express.Router());
 
-      group('products', ({ resource }) => {
+      group('products', products => {
+        const router = products.export();
         function beforeHandler(req: any) {
           console.log('Request: ', req);
         }
@@ -372,7 +521,7 @@ describe('Route Group Tests', () => {
         function indexHandler1() {}
         function indexHandler2() {}
 
-        resource(router, {
+        products.resource({
           handlers: { index: [indexHandler1, indexHandler2] },
           beforeHandlers: [beforeHandler],
           afterHandlers: [afterHandler],
@@ -387,12 +536,11 @@ describe('Route Group Tests', () => {
     });
 
     test('invalid resource exception', () => {
-      const { group } = new RouteGroup();
-      const router = express.Router();
+      const { group } = new RouteGroup('/', express.Router());
 
-      group('invalid', ({ resource }) => {
+      group('invalid', invalid => {
         expect(() => {
-          resource(router, undefined as any);
+          invalid.resource(undefined as any);
         }).toThrowError('Resource handlers are required!');
       });
     });
@@ -400,9 +548,39 @@ describe('Route Group Tests', () => {
 
   describe('some other tests', () => {
     test('undefined path data', () => {
-      const { group } = new RouteGroup();
-      group(undefined, ({ to }) => {
-        expect(to('/')).toEqual('/');
+      const { group } = new RouteGroup('/', express.Router());
+      group(undefined, und => {
+        und.get('/', () => null);
+        expect(und.export().stack[0].route.path).toEqual('/');
+      });
+    });
+
+    test('start default path', () => {
+      const base = new RouteGroup('/blogs', express.Router());
+      const router = base.export();
+      expect(base.export().stack.length).toEqual(0);
+
+      base.group('/', blogs => {
+        blogs.get('/');
+        expect(router.stack[0].route.path).toEqual('/blogs');
+      });
+    });
+
+    test('Check request methods to make sure any method is not overridden', () => {
+      const { group } = new RouteGroup('/blogs', express.Router());
+      group('/', base => {
+        base.get('/', () => null);
+        base.post('/create', () => null);
+        base.delete('/delete', () => null);
+        base.put('/update', () => null);
+        base.patch('/patch', () => null);
+        const router = base.export();
+
+        expect(router.stack[0].route.methods.get).toEqual(true);
+        expect(router.stack[1].route.methods.post).toEqual(true);
+        expect(router.stack[2].route.methods.delete).toEqual(true);
+        expect(router.stack[3].route.methods.put).toEqual(true);
+        expect(router.stack[4].route.methods.patch).toEqual(true);
       });
     });
   });

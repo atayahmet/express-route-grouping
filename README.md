@@ -24,39 +24,28 @@ $ yarn add express-route-grouping
 import { Router } from 'express';
 import RouteGroup from 'express-route-grouping';
 
-const router = Router();
-const { group } = new RouteGroup();
+const root = new RouteGroup('/', Router());
 
-group('blogs', blogs => {
-  
+root.group('blogs', blogs => {
   // -> /blogs
-  router.get(blogs.to('/'), () => {
-
-  });
+  blogs.get('/', () => {});
 
   blogs.group(':blogId', blog => {
+    // -> /blogs/:blogId
+    blog.get('/', (req, res) => {});
 
     // -> /blogs/:blogId
-    router.get(blog.to('/'), (req, res) => {
-
-    });
-
-    // -> /blogs/:blogId
-    router.post(blog.to('/'), (req, res) => {
-
-    });
+    blog.post('/', (req, res) => {});
 
     // -> /blogs/:blogId/comments
-    router.get(blog.to('comments'), (req, res) => {
-
-    });
+    blog.get('comments', (req, res) => {});
 
     // -> /blogs/:blogId/likes
-    router.get(blog.to('likes'), (req, res) => {
-
-    });
+    blog.get('likes', (req, res) => {});
   });
 });
+
+app.use('/', root.export());
 ```
 
 > **Not:** You can nest all routes unlimitedly as above.
@@ -71,89 +60,67 @@ Let's see the examples:
 import { Router } from 'express';
 import RouteGroup from 'express-route-grouping';
 
-const router = Router();
-const { group } = new RouteGroup();
+const root = new RouteGroup('/', Router());
 
-group('products', products => {
-  products.resource(router, {
+root.group('products', products => {
+  products.resource({
     handlers: {
       // GET: /products
-      index(req, res) {
-
-      },
+      index(req, res) {},
 
       // GET: /products/:productId
-      find(req, res) {
-
-      },
+      find(req, res) {},
 
       // POST: /products
-      create(req, res) {
-
-      },
+      create(req, res) {},
 
       // PUT: /products/:productId
-      update(req, res) {
-
-      },
+      update(req, res) {},
 
       // PATCH: /products/:productId
-      patch(req, res) {
-
-      },
+      patch(req, res) {},
 
       // DELETE: /products/:productId
-      delete(req, res) {
-
-      },
+      delete(req, res) {},
     },
   });
 });
+
+app.use('/', root.export());
 ```
 
 You can also set a class instance including resource methods.
 
 ```ts
 class BlogController {
-
   // GET: /products
-  index = (req, res) => {
-
-  };
+  index = (req, res) => {};
 
   // GET: /products/:productId
-  find = (req, res) => {
-
-  };
+  find = (req, res) => {};
 
   // POST: /products
-  create = (req, res) => {
-
-  };
+  create = (req, res) => {};
 
   // PUT: /products/:productId
-  update = (req, res) => {
-
-  };
+  update = (req, res) => {};
 
   // PATCH: /products/:productId
-  patch = (req, res) => {
-
-  };
+  patch = (req, res) => {};
 
   // DELETE: /products/:productId
-  delete = (req, res) => {
-
-  };
+  delete = (req, res) => {};
 }
 ```
 
 ```ts
-group('products', ({ resource }) => {
-  resource(router, {
+root.group('products', ({ resource }) => {
+  resource({
     handlers: new BlogController(),
   });
 });
+
+app.use('/', root.export());
 ```
 
 > **Note**: You don't have to add all methods to handlers. It will consider only the defined ones.
@@ -172,11 +139,10 @@ group('products', ({ resource }) => {
 import { Router } from 'express';
 import RouteGroup from 'express-route-grouping';
 
-const router = Router();
-const { group } = new RouteGroup();
+const root = new RouteGroup('/', Router());
 
-group('products', products => {
-  products.resource(router, {
+root.group('products', products => {
+  products.resource({
     handlers: {
       // -> index: (GET: /products)
       // -> find: (GET: /products/:productId)
@@ -188,7 +154,7 @@ group('products', products => {
   });
 
   products.group('items', items => {
-    items.resource(router, {
+    items.resource({
       handlers: {
         // -> index: (GET: /products/:productId/items)
         // -> find: (GET: /products/:productId/items/:itemId)
@@ -200,6 +166,8 @@ group('products', products => {
     });
   });
 });
+
+app.use('/', root.export());
 ```
 
 ## Tests

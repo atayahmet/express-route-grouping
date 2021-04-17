@@ -1,43 +1,51 @@
-import { IRouter } from 'express';
+import { IRouter as IExpressRouter } from 'express';
 import pluralize from 'pluralize';
 import { RequestMethods, ResourceOptions, Resources } from './types';
 import RESOURCES from './resources';
 
-type GroupCallback = (router: RouteGroup) => void;
+type GroupCallback = (router: IRouter) => void;
+
+type IRouter = IExpressRouter & {
+  group: (path: string, fn: GroupCallback) => void;
+  resource: (options: ResourceOptions) => void;
+  export: () => IExpressRouter;
+};
 
 class RouteGroup {
   private head: string;
+  private router: IExpressRouter;
+  private proxyRouter?: IRouter;
 
-  constructor(path: string = '/') {
+  constructor(path: string = '/', router: IExpressRouter) {
     this.head = path;
+    this.router = router;
   }
 
-  public group = (path: string = '', fn: GroupCallback): RouteGroup => {
-    const fullPath = this.head + this.sanitize(path);
-    const newGroup = new RouteGroup(fullPath);
-    fn(newGroup);
-    return newGroup;
+  public group = (path: string = '', fn: GroupCallback): void => {
+    const newGroup = new RouteGroup(
+      this.head + this.sanitize(path),
+      this.router
+    );
+    this.proxyRouter = this.createProxy(this.router, newGroup);
+    fn(this.proxyRouter);
   };
 
-  public to = (suffix: string = '/'): string => {
-    return this.head + this.sanitize(suffix);
-  };
-
-  public resource = (router: IRouter, options: ResourceOptions) => {
+  public resource = (options: ResourceOptions) => {
     if (!options) {
       throw new Error('Resource handlers are required!');
     }
 
     const { handlers = {}, beforeHandlers = [], afterHandlers = [] } = options;
+
     Object.keys(RESOURCES).forEach((name: string) => {
       const { method, suffix } = RESOURCES[name];
-      const requestRouter = router[method as RequestMethods];
+      const requestRouter = this.router[method as RequestMethods];
 
       const fullPath = this.to(suffix ? this.getPlaceholder() : '/');
       const handler = handlers[name as Resources] as any;
 
       if (handler) {
-        requestRouter.bind(router)(
+        requestRouter.bind(this.router)(
           fullPath,
           ...beforeHandlers,
           ...(Array.isArray(handler) ? handler : [handler]),
@@ -45,6 +53,12 @@ class RouteGroup {
         );
       }
     });
+  };
+
+  public export = () => this.router;
+
+  private to = (suffix: string = '/'): string => {
+    return this.head + this.sanitize(suffix);
   };
 
   private sanitize(path: string): string {
@@ -55,15 +69,39 @@ class RouteGroup {
     let newPath = path.replace(/^(\/+)(.)/, '$2').replace(/(.)(\/+)$/, '$1');
 
     // add delimiter on the end
-    if (this.head !== '/') newPath = newPath.padStart(newPath.length + 1, '/');
+    if (this.head !== '/') {
+      newPath = newPath.padStart(newPath.length + 1, '/');
+    }
 
     return newPath;
+  }
+
+  private callRouter(value: Function | RequestMethods) {
+    return typeof value === 'function'
+      ? (path: string, ...handlers: CallableFunction[]) => {
+          value.call(this.router, this.to(path), ...handlers);
+        }
+      : this.router[value];
   }
 
   private getPlaceholder() {
     const namespace = this.head.split('/').pop() || '';
     const prefix = pluralize.singular(namespace);
     return `:${prefix ? `${prefix}Id` : 'id'}`;
+  }
+
+  private createProxy(router: IExpressRouter, newGroup: RouteGroup) {
+    const self = newGroup as any;
+    const callRouter = this.callRouter.bind(newGroup);
+    const handler = {
+      get: function(_: any, prop: any) {
+        return self[prop]
+          ? Reflect.get(self, prop)
+          : callRouter(router[prop as RequestMethods]);
+      },
+    };
+
+    return new Proxy<IRouter>(this as any, handler);
   }
 }
 
