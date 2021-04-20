@@ -1,4 +1,4 @@
-import { IRouter as IExpressRouter } from 'express';
+import { IRouter as IExpressRouter, Router } from 'express';
 import pluralize from 'pluralize';
 import { RequestMethods, ResourceOptions, Resources } from './types';
 import RESOURCES from './resources';
@@ -16,7 +16,7 @@ class RouteGroup {
   private router: IExpressRouter;
   private proxyRouter?: IRouter;
 
-  constructor(path: string = '/', router: IExpressRouter) {
+  constructor(path: string = '/', router: IExpressRouter = Router()) {
     this.head = path;
     this.router = router;
   }
@@ -57,7 +57,7 @@ class RouteGroup {
 
   public export = () => this.router;
 
-  private to = (suffix: string = '/'): string => {
+  public to = (suffix: string = '/'): string => {
     return this.head + this.sanitize(suffix);
   };
 
