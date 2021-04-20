@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.1](https://github.com/atayahmet/express-route-grouping/compare/v1.0.0..v1.0.1) (2021-04-20)
+
+
+### Bug Fixes
+
+* the 'to' helper has been made public ([d693dbd](https://github.com/atayahmet/express-route-grouping/commit/d693dbdf05d86f14a6253f947ba2ef31f4884397))
+
 ## [1.0.0](https://github.com/atayahmet/express-route-grouping/compare/v0.1.4..v1.0.0) (2021-04-17)
 
 
