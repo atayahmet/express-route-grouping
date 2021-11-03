@@ -76,6 +76,17 @@ class RouteGroup {
     return newPath;
   }
 
+  private toCamelCase(str: string): string {
+    const word = str
+      .replace(/[^A-Za-z0-9]/g, ' ') // transfrom non-alphanumeric chars to space
+      .replace(/\s+/g, ' ') // trim multiple space
+      .split(/[-_\s]/)
+      .map(f => f[0].toLocaleUpperCase() + f.substr(1))
+      .join('');
+
+    return word[0].toLocaleLowerCase() + word.substr(1);
+  }
+
   private callRouter(value: Function | RequestMethods) {
     return typeof value === 'function'
       ? (path: string, ...handlers: CallableFunction[]) => {
@@ -86,7 +97,7 @@ class RouteGroup {
 
   private getPlaceholder() {
     const namespace = this.head.split('/').pop() || '';
-    const prefix = pluralize.singular(namespace);
+    const prefix = pluralize.singular(this.toCamelCase(namespace));
     return `:${prefix ? `${prefix}Id` : 'id'}`;
   }
 

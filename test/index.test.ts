@@ -535,6 +535,69 @@ describe('Route Group Tests', () => {
       });
     });
 
+    it('should trim non-alphanumeric characters from route parameters and transform camelCase', () => {
+      const { group } = new RouteGroup('/', express.Router());
+
+      group('product-brand__item--detail', products => {
+        products.resource({
+          excludes: [],
+          handlers: {
+            index: () => {},
+            find: () => {},
+            create: () => {},
+            update: () => {},
+            delete: () => {},
+            patch: () => {},
+          },
+        });
+
+        const router = products.export();
+        const routeIndex = router.stack.find(({ route }) => {
+          return route.path === '/product-brand__item--detail' && route.methods.get === true;
+        });
+        expect(routeIndex).not.toEqual(undefined);
+
+        const routeFind = router.stack.find(({ route }) => {
+          return (
+            route.path === '/product-brand__item--detail/:productBrandItemDetailId' &&
+            route.methods.get === true
+          );
+        });
+        expect(routeFind).not.toEqual(undefined);
+
+        const routeCreate = router.stack.find(({ route }) => {
+          return (
+            route.path === '/product-brand__item--detail' && route.methods.post === true
+          );
+        });
+        expect(routeCreate).not.toEqual(undefined);
+
+        const routeUpdate = router.stack.find(({ route }) => {
+          return (
+            route.path === '/product-brand__item--detail/:productBrandItemDetailId' &&
+            route.methods.put === true
+          );
+        });
+        expect(routeUpdate).not.toEqual(undefined);
+
+        const routeDelete = router.stack.find(({ route }) => {
+          return (
+            route.path === '/product-brand__item--detail/:productBrandItemDetailId' &&
+            route.methods.delete === true
+          );
+        });
+        expect(routeDelete).not.toEqual(undefined);
+
+        const routePatch = router.stack.find(({ route }) => {
+          return (
+            route.path === '/product-brand__item--detail/:productBrandItemDetailId' &&
+            route.methods.patch === true
+          );
+        });
+        expect(routePatch).not.toEqual(undefined);
+      });
+    });
+
     test('invalid resource exception', () => {
       const { group } = new RouteGroup('/', express.Router());
 
