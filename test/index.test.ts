@@ -535,10 +535,10 @@ describe('Route Group Tests', () => {
       });
     });
 
-    it('should trim non-alphanumeric characters from route parameters', () => {
+    it('should trim non-alphanumeric characters from route parameters and transform camelCase', () => {
       const { group } = new RouteGroup('/', express.Router());
 
-      group('product-brands', products => {
+      group('product-brand__item--detail', products => {
         products.resource({
           excludes: [],
           handlers: {
@@ -553,13 +553,13 @@ describe('Route Group Tests', () => {
 
         const router = products.export();
         const routeIndex = router.stack.find(({ route }) => {
-          return route.path === '/product-brands' && route.methods.get === true;
+          return route.path === '/product-brand__item--detail' && route.methods.get === true;
         });
         expect(routeIndex).not.toEqual(undefined);
 
         const routeFind = router.stack.find(({ route }) => {
           return (
-            route.path === '/product-brands/:productbrandId' &&
+            route.path === '/product-brand__item--detail/:productBrandItemDetailId' &&
             route.methods.get === true
           );
         });
@@ -567,14 +567,14 @@ describe('Route Group Tests', () => {
 
         const routeCreate = router.stack.find(({ route }) => {
           return (
-            route.path === '/product-brands' && route.methods.post === true
+            route.path === '/product-brand__item--detail' && route.methods.post === true
           );
         });
         expect(routeCreate).not.toEqual(undefined);
 
         const routeUpdate = router.stack.find(({ route }) => {
           return (
-            route.path === '/product-brands/:productbrandId' &&
+            route.path === '/product-brand__item--detail/:productBrandItemDetailId' &&
             route.methods.put === true
           );
         });
@@ -582,7 +582,7 @@ describe('Route Group Tests', () => {
 
         const routeDelete = router.stack.find(({ route }) => {
           return (
-            route.path === '/product-brands/:productbrandId' &&
+            route.path === '/product-brand__item--detail/:productBrandItemDetailId' &&
             route.methods.delete === true
           );
         });
@@ -590,7 +590,7 @@ describe('Route Group Tests', () => {
 
         const routePatch = router.stack.find(({ route }) => {
           return (
-            route.path === '/product-brands/:productbrandId' &&
+            route.path === '/product-brand__item--detail/:productBrandItemDetailId' &&
             route.methods.patch === true
           );
         });
