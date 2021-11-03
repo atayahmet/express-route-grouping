@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/atayahmet/express-route-grouping/compare/v1.0.1..v1.1.0) (2021-11-03)
+
+
+### Features
+
+* convert route params to camelCase ([d3b7ef1](https://github.com/atayahmet/express-route-grouping/commit/d3b7ef13e7fbc9fd81cbf036d627c2c40e7fd81f))
+
+
+### Bug Fixes
+
+* lint ([b9ff962](https://github.com/atayahmet/express-route-grouping/commit/b9ff962453ba1a6461beee5cec76cf5edf72006a))
+* trim non alphanumeric char from route params ([f7ebedb](https://github.com/atayahmet/express-route-grouping/commit/f7ebedb11e55505de6144453530d86d7144fa5b9))
+
 ### [1.0.1](https://github.com/atayahmet/express-route-grouping/compare/v1.0.0..v1.0.1) (2021-04-20)
 
 
