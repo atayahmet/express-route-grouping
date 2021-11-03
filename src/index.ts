@@ -76,6 +76,10 @@ class RouteGroup {
     return newPath;
   }
 
+  private trimNonAlphaNumeric(str: string): string {
+    return str.replace(/[^A-Za-z0-9]/g, '');
+  }
+
   private callRouter(value: Function | RequestMethods) {
     return typeof value === 'function'
       ? (path: string, ...handlers: CallableFunction[]) => {
@@ -86,7 +90,7 @@ class RouteGroup {
 
   private getPlaceholder() {
     const namespace = this.head.split('/').pop() || '';
-    const prefix = pluralize.singular(namespace);
+    const prefix = pluralize.singular(this.trimNonAlphaNumeric(namespace));
     return `:${prefix ? `${prefix}Id` : 'id'}`;
   }
 
