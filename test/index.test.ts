@@ -606,6 +606,26 @@ describe('Route Group Tests', () => {
       });
     });
 
+    it('should escape the came case operation if base route equal to "/"', () => {
+      const { group } = new RouteGroup('/', express.Router());
+
+      group('/', products => {
+        products.get('/', () => ({}));
+
+        products.resource({
+          excludes: [],
+          handlers: {
+            index: () => {},
+            find: () => {},
+            create: () => {},
+            update: () => {},
+            delete: () => {},
+            patch: () => {},
+          },
+        });
+      });
+    });
+
     test('invalid resource exception', () => {
       const { group } = new RouteGroup('/', express.Router());
 

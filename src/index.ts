@@ -77,6 +77,10 @@ class RouteGroup {
   }
 
   private toCamelCase(str: string): string {
+    if (str === '') {
+      return str;
+    }
+
     const word = str
       .replace(/[^A-Za-z0-9]/g, ' ') // transfrom non-alphanumeric chars to space
       .replace(/\s+/g, ' ') // trim multiple space
