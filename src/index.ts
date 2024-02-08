@@ -9,6 +9,7 @@ type IRouter = IExpressRouter & {
   group: (path: string, fn: GroupCallback) => void;
   resource: (options: ResourceOptions) => void;
   export: () => IExpressRouter;
+  to: (suffix: string) => string;
 };
 
 class RouteGroup {
