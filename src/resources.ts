@@ -5,6 +5,6 @@ const RESOURCES = {
   update: { method: 'put', suffix: true },
   patch: { method: 'patch', suffix: true },
   delete: { method: 'delete', suffix: true },
-} as Record<string, Record<string, any>>;
+};
 
 export default RESOURCES;

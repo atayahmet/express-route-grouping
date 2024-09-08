@@ -1,123 +1,164 @@
-import { IRouter as IExpressRouter, Router } from 'express';
+import { IRouter as IExpressRouter, Router, NextFunction } from 'express';
 import pluralize from 'pluralize';
-import { RequestMethods, ResourceOptions, Resources } from './types';
+import listRoutes from 'express-list-routes';
+
+import {
+  isResourceConfig,
+  makeCamelCase,
+  makePlaceholder,
+  normalizePath,
+} from './utils';
+import {
+  EndpointNames,
+  GroupArgs,
+  IResource,
+  IRouter,
+  RegisterCb,
+  RequestMethods,
+  ResourceType,
+} from './types';
 import RESOURCES from './resources';
-
-type GroupCallback = (router: IRouter) => void;
-
-type IRouter = IExpressRouter & {
-  group: (path: string, fn: GroupCallback) => void;
-  resource: (options: ResourceOptions) => void;
-  export: () => IExpressRouter;
-  to: (suffix: string) => string;
-};
 
 class RouteGroup {
   private head: string;
-  private router: IExpressRouter;
-  private proxyRouter?: IRouter;
 
-  constructor(path: string = '/', router: IExpressRouter = Router()) {
+  private router: IExpressRouter;
+
+  private middlewares: NextFunction[];
+
+  constructor(
+    path: string = '',
+    router: IExpressRouter = Router(),
+    middlewares: NextFunction[] = []
+  ) {
     this.head = path;
     this.router = router;
+    this.middlewares = middlewares;
   }
 
-  public group = (path: string = '', fn: GroupCallback): void => {
-    const newGroup = new RouteGroup(
-      this.head + this.sanitize(path),
-      this.router
-    );
-    this.proxyRouter = this.createProxy(this.router, newGroup);
-    fn(this.proxyRouter);
-  };
+  get path() {
+    return this.head;
+  }
 
-  public resource = (options: ResourceOptions) => {
-    if (!options) {
-      throw new Error('Resource handlers are required!');
+  public getRouter() {
+    return this.router;
+  }
+
+  public listRoutes() {
+    return listRoutes(this.router, { logger: false });
+  }
+
+  public group(...rawArgs: GroupArgs) {
+    const { middlewares, register, prefix = '' } = this.parseGroupArgs(rawArgs);
+    const head = normalizePath(this.head, prefix);
+    const group = new RouteGroup(head, this.router, [
+      ...this.middlewares,
+      ...middlewares,
+    ]);
+    const proxy = this.createProxy(this.router, group);
+
+    register(proxy);
+
+    return (this as unknown) as IRouter;
+  }
+
+  public resource(arg: IResource | ResourceType) {
+    let handlers = arg;
+    let middlewares = {} as ResourceType['middlewares'];
+    let parameters = {} as { [prop: string]: string };
+    let path = '';
+
+    if (isResourceConfig(arg)) {
+      handlers = arg.handlers;
+      path = arg.path || '';
+      middlewares = arg.middlewares || {};
+      parameters = arg.parameters || {};
     }
+    const proxy = this.createProxy(this.router, this);
 
-    const { handlers = {}, beforeHandlers = [], afterHandlers = [] } = options;
-
-    Object.keys(RESOURCES).forEach((name: string) => {
-      const { method, suffix } = RESOURCES[name];
-      const requestRouter = this.router[method as RequestMethods];
-
-      const fullPath = this.to(suffix ? this.getPlaceholder() : '/');
-      const handler = handlers[name as Resources] as any;
-
-      if (handler) {
-        requestRouter.bind(this.router)(
-          fullPath,
-          ...beforeHandlers,
-          ...(Array.isArray(handler) ? handler : [handler]),
-          ...afterHandlers
-        );
+    Object.entries(RESOURCES).forEach(([endpoint, conf]) => {
+      if (!Reflect.has(handlers, endpoint)) {
+        return;
       }
+      const key = endpoint as EndpointNames;
+      const { [key]: midds = [] } = middlewares || {};
+
+      // parse the path and generate parameter names
+      const names = path
+        .split('.')
+        .filter(Boolean)
+        .reduce((acc: string[], segment: string) => {
+          let items = [pluralize.singular(segment), 'id'];
+          if (parameters[segment]) {
+            items = parameters[segment].split(':');
+          }
+          const placeholder = makePlaceholder(makeCamelCase(...items));
+          acc.push(segment, placeholder);
+          return acc;
+        }, []);
+      // if `path` and resource config does not provided,
+      // generate placeholder with the group name.
+      if (!isResourceConfig(arg) && names.length === 0) {
+        const groupName = this.head.split('/').pop() || '';
+        const placeholder = makePlaceholder(
+          makeCamelCase(pluralize.singular(groupName), 'id')
+        );
+        names.push(placeholder);
+      }
+      // if no need placeholder in last segment,
+      // remove it.
+      if (!conf.suffix) {
+        names.pop();
+      }
+
+      const http = Reflect.get(proxy, conf.method, this);
+      http(names.join('/'), midds);
     });
-  };
-
-  public export = () => this.router;
-
-  public to = (suffix: string = '/'): string => {
-    return this.head + this.sanitize(suffix);
-  };
-
-  private sanitize(path: string): string {
-    if (path === '/') return '';
-
-    // remove slashes at start and end positions, if exists
-    // to sure there is no any slashes.
-    let newPath = path.replace(/^(\/+)(.)/, '$2').replace(/(.)(\/+)$/, '$1');
-
-    // add delimiter on the end
-    if (this.head !== '/') {
-      newPath = newPath.padStart(newPath.length + 1, '/');
-    }
-
-    return newPath;
+    return this;
   }
 
-  private toCamelCase(str: string): string {
-    if (str === '') {
-      return str;
-    }
-
-    const word = str
-      .replace(/[^A-Za-z0-9]/g, ' ') // transfrom non-alphanumeric chars to space
-      .replace(/\s+/g, ' ') // trim multiple space
-      .split(/[-_\s]/)
-      .map(f => f[0].toLocaleUpperCase() + f.substr(1))
-      .join('');
-
-    return word[0].toLocaleLowerCase() + word.substr(1);
-  }
-
-  private callRouter(value: Function | RequestMethods) {
-    return typeof value === 'function'
-      ? (path: string, ...handlers: CallableFunction[]) => {
-          value.call(this.router, this.to(path), ...handlers);
+  private callRouter(arg: Function | RequestMethods) {
+    return typeof arg === 'function'
+      ? (path: string, ...inlineMiddlewares: NextFunction[]) => {
+          const http = arg.bind(this.router);
+          const route = normalizePath(this.head, path);
+          http(route, ...this.middlewares, ...inlineMiddlewares);
         }
-      : this.router[value];
+      : this.router[arg];
   }
 
-  private getPlaceholder() {
-    const namespace = this.head.split('/').pop() || '';
-    const prefix = pluralize.singular(this.toCamelCase(namespace));
-    return `:${prefix ? `${prefix}Id` : 'id'}`;
-  }
-
-  private createProxy(router: IExpressRouter, newGroup: RouteGroup) {
-    const self = newGroup as any;
-    const callRouter = this.callRouter.bind(newGroup);
+  private createProxy(router: IExpressRouter, target: RouteGroup) {
+    const callRouter = this.callRouter.bind(target);
     const handler = {
-      get: function(_: any, prop: any) {
-        return self[prop]
-          ? Reflect.get(self, prop)
+      get: function(_: unknown, prop: 'group' | 'path') {
+        return Reflect.has(target, prop)
+          ? Reflect.get<RouteGroup, string>(target, prop, target)
           : callRouter(router[prop as RequestMethods]);
       },
     };
+    return new Proxy<IRouter>((this as unknown) as IRouter, handler);
+  }
 
-    return new Proxy<IRouter>(this as any, handler);
+  private parseGroupArgs(args: unknown[]) {
+    switch (typeof args[0]) {
+      case 'string': {
+        const register = args.pop();
+        return {
+          prefix: args[0],
+          register: register as RegisterCb,
+          middlewares: args.slice(1) as NextFunction[],
+        };
+      }
+      case 'function': {
+        const register = args.pop();
+        return {
+          register: register as RegisterCb,
+          middlewares: args as NextFunction[],
+        };
+      }
+      default:
+        throw new Error('invalid group parameters');
+    }
   }
 }
 
