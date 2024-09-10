@@ -66,7 +66,8 @@ class RouteGroup {
     let handlers = arg;
     let middlewares = {} as ResourceType['middlewares'];
     let parameters = {} as { [prop: string]: string };
-    let path = '';
+    const base = this.head.split('/');
+    let path = base.pop() || '';
 
     if (isResourceConfig(arg)) {
       handlers = arg.handlers;
@@ -74,12 +75,12 @@ class RouteGroup {
       middlewares = arg.middlewares || {};
       parameters = arg.parameters || {};
     }
-    const proxy = this.createProxy(this.router, this);
 
     Object.entries(RESOURCES).forEach(([endpoint, conf]) => {
       if (!Reflect.has(handlers, endpoint)) {
         return;
       }
+
       const key = endpoint as EndpointNames;
       const { [key]: midds = [] } = middlewares || {};
 
@@ -93,27 +94,32 @@ class RouteGroup {
             items = parameters[segment].split(':');
           }
           const placeholder = makePlaceholder(makeCamelCase(...items));
-          acc.push(segment, placeholder);
+          acc.push(...base, segment, placeholder);
           return acc;
         }, []);
-      // if `path` and resource config does not provided,
-      // generate placeholder with the group name.
-      if (!isResourceConfig(arg) && names.length === 0) {
-        const groupName = this.head.split('/').pop() || '';
-        const placeholder = makePlaceholder(
-          makeCamelCase(pluralize.singular(groupName), 'id')
-        );
-        names.push(placeholder);
-      }
+
       // if no need placeholder in last segment,
       // remove it.
       if (!conf.suffix) {
         names.pop();
       }
 
-      const http = Reflect.get(proxy, conf.method, this);
-      http(names.join('/'), midds);
+      // get the method from the router
+      const fn = Reflect.get(this.router, conf.method);
+      if (typeof fn !== 'function') {
+        throw new Error('Invalid method');
+      }
+
+      // get the handler from the resource
+      const handler = (handlers as IResource)[endpoint as EndpointNames];
+      if (typeof handler !== 'function') {
+        throw new Error('Handler is not a function');
+      }
+
+      const http = fn.bind(this.router);
+      http(names.join('/'), ...this.middlewares, midds, handler.bind(handlers));
     });
+
     return this;
   }
 
@@ -132,7 +138,7 @@ class RouteGroup {
     const handler = {
       get: function(_: unknown, prop: 'group' | 'path') {
         return Reflect.has(target, prop)
-          ? Reflect.get<RouteGroup, string>(target, prop, target)
+          ? Reflect.get<RouteGroup, string>(target, prop)
           : callRouter(router[prop as RequestMethods]);
       },
     };

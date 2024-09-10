@@ -20,7 +20,12 @@ export type GroupArgs =
   | [...NextFunction[], RegisterCb]
 
 export interface IResource  {
-  index(req: Request, res: Response, ): unknown;
+  index?: RequestHandler;
+  show?: RequestHandler;
+  store?: RequestHandler;
+  update?: RequestHandler;
+  patch?: RequestHandler;
+  destroy?: RequestHandler;
 }
 
 export type ResourceType = {
@@ -28,11 +33,11 @@ export type ResourceType = {
   handlers: IResource;
   middlewares?: {
     index?: NextFunction[];
-    find?: NextFunction[];
-    create?: NextFunction[];
+    show?: NextFunction[];
+    store?: NextFunction[];
     update?: NextFunction[];
     patch?: NextFunction[];
-    delete?: NextFunction[];
+    destroy?: NextFunction[];
   },
   parameters?: {
     [prop: string]: string;

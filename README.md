@@ -2,7 +2,7 @@
 
 # Express JS Route Grouping
 
-Although there are many express js route grouping packages, there is no grouping package with dynamic parameter holders feature. Beside [Resource API Model](https://www.thoughtworks.com/insights/blog/rest-api-design-resource-modeling) approach has been integrated in this package basically.
+Although there are many express js route grouping packages, I wanted to create a package that is more flexible and easy to use. You can easily group your routes and add middleware to them.
 
 ## Install
 
@@ -20,155 +20,188 @@ $ yarn add express-route-grouping
 
 ## Basic Usage
 
-```ts
-import { Router } from 'express';
-import RouteGroup from 'express-route-grouping';
+```typescript
+import RouteGrouping from 'express-route-grouping';
 
-const root = new RouteGroup('/', Router());
+const root = RouteGrouping();
 
-root.group('blogs', blogs => {
-  // -> /blogs
-  blogs.get('/', () => {});
+const m1 = (req, res, next) => {
+  console.log('Middleware 1');
+  next();
+};
 
-  blogs.group(':blogId', blog => {
-    // -> /blogs/:blogId
-    blog.get('/', (req, res) => {});
+const m2 = (req, res, next) => {
+  console.log('Middleware 2');
+  next();
+};
 
-    // -> /blogs/:blogId
-    blog.post('/', (req, res) => {});
+const auth = (req, res, next) => {
+  console.log('Auth Middleware');
+  next();
+};
 
-    // -> /blogs/:blogId/comments
-    blog.get('comments', (req, res) => {});
-
-    // -> /blogs/:blogId/likes
-    blog.get('likes', (req, res) => {});
+root.group('/api', m1, m2, api => {
+  api.group('/v1', auth, v1 => {
+    v1.get('/users', (req, res) => {
+      res.send('Users');
+    });
   });
 });
 
-app.use('/', root.export());
+app.use(root.getRouter());
+```
+
+> Note: You can add as many middlewares as you want.
+
+Add middleware to the group without adding a route.
+
+```typescript
+root.group('/api', m1, m2, api => {
+  api.group(auth, perm, api => {
+    api.get('/users', (req, res) => {
+      res.send('Users');
+    });
+    api.get('/comments', (req, res) => {
+      res.send('Comments');
+    });
+  });
+});
 ```
 
 > **Not:** You can nest all routes unlimitedly as above.
 
 ## Resource API Model
 
-Resource api modeling is a approach to standarts some generic http operations.
+You can use the resource API model to create a RESTful API. Resource api modeling is a approach to standarts some generic http operations.
 
 Let's see the examples:
 
-```ts
-import { Router } from 'express';
-import RouteGroup from 'express-route-grouping';
+```typescript
+import { IResource } from 'express-route-grouping';
 
-const root = new RouteGroup('/', Router());
+class UserController implements IResource {
+  index(req, res) {
+    res.send('Users');
+  }
 
-root.group('products', products => {
-  products.resource({
-    handlers: {
-      // GET: /products
-      index(req, res) {},
+  show(req, res) {
+    res.send('User');
+  }
 
-      // GET: /products/:productId
-      find(req, res) {},
+  store(req, res) {
+    res.send('User created');
+  }
 
-      // POST: /products
-      create(req, res) {},
+  update(req, res) {
+    res.send('User updated');
+  }
 
-      // PUT: /products/:productId
-      update(req, res) {},
+  patch(req, res) {
+    res.send('User patched');
+  }
 
-      // PATCH: /products/:productId
-      patch(req, res) {},
-
-      // DELETE: /products/:productId
-      delete(req, res) {},
-    },
-  });
-});
-
-app.use('/', root.export());
-```
-
-You can also set a class instance including resource methods.
-
-```ts
-class BlogController {
-  // GET: /products
-  index = (req, res) => {};
-
-  // GET: /products/:productId
-  find = (req, res) => {};
-
-  // POST: /products
-  create = (req, res) => {};
-
-  // PUT: /products/:productId
-  update = (req, res) => {};
-
-  // PATCH: /products/:productId
-  patch = (req, res) => {};
-
-  // DELETE: /products/:productId
-  delete = (req, res) => {};
+  destroy(req, res) {
+    res.send('User deleted');
+  }
 }
-```
 
-```ts
-root.group('products', ({ resource }) => {
-  resource({
-    handlers: new BlogController(),
+root.group('/api', m1, m2, api => {
+  api.group('/v1', v1Auth, v1 => {
+    v1.resource(new UserController());
+  });
+
+  api.group('/v2', v2Auth, v2 => {
+    v2.resource(new UserController());
   });
 });
-
-app.use('/', root.export());
 ```
 
-> **Note**: You don't have to add all methods to handlers. It will consider only the defined ones.
+The output of the above code is as follows:
 
-### Resource Options
+**v1**
 
-| Name           | Type                | Description                                             |
-| -------------- | ------------------- | ------------------------------------------------------- |
-| handlers       | Function/Function[] | This is main handler(s). It can pass multiple handlers. |
-| beforeHandlers | Function[]          | Adds handlers to **before** main handlers.              |
-| afterHandlers  | Function[]          | Adds handlers to **after** main handlers.               |
+```plaintext
+GET    /api/v1/users
+GET    /api/v1/users/:userId
+POST   /api/v1/users
+PUT    /api/v1/users/:userId
+PATCH  /api/v1/users/:userId
+DELETE /api/v1/users/:userId
 
-### Nested Resource Model
+// added middlewares
+middlewares: [m1, m2, v1Auth]
+```
 
-```ts
-import { Router } from 'express';
-import RouteGroup from 'express-route-grouping';
+**v2**
 
-const root = new RouteGroup('/', Router());
+```plaintext
+GET    /api/v2/users
+GET    /api/v2/users/:userId
+POST   /api/v2/users
+PUT    /api/v2/users/:userId
+PATCH  /api/v2/users/:userId
+DELETE /api/v2/users/:userId
 
-root.group('products', products => {
-  products.resource({
-    handlers: {
-      // -> index: (GET: /products)
-      // -> find: (GET: /products/:productId)
-      // -> create: (POST: /products)
-      // -> update: (PUT: /products/:productId)
-      // -> patch: (PATCH: /products/:productId)
-      // -> delete: (DELETE: /products/:productId)
-    },
-  });
+// added middlewares
+middlewares: [m1, m2, v2Auth]
+```
 
-  products.group('items', items => {
-    items.resource({
-      handlers: {
-        // -> index: (GET: /products/:productId/items)
-        // -> find: (GET: /products/:productId/items/:itemId)
-        // -> create: (POST: /products/:productId/items)
-        // -> update: (PUT: /products/:productId/items/:itemId)
-        // -> patch: (PATCH: /products/:productId/items/:itemId)
-        // -> delete: (DELETE: /products/:productId/items/:itemId)
-      },
-    });
-  });
+> Note: You don't need to add all routes to the controller. You can add only the routes you want to use.
+
+### Resource API Model Configuration
+
+You can configure the resource API model as you wish.
+
+```typescript
+root.resource({
+  path: 'blogs.comments.likes',
+  handlers: new UserController(),
+  middlewares: {
+    index: [auth],
+    delete: [auth, perm],
+  },
+  parameters: {
+    blogs: 'slug',
+  },
 });
-
-app.use('/', root.export());
 ```
+
+The output of the above code is as follows:
+
+```plaintext
+GET    /blogs/:slug/comments/:commentId/likes
+          ├── middlewares: [auth]
+GET    /blogs/:slug/comments/:commentId/likes/:likeId
+POST   /blogs/:slug/comments/:commentId/likes
+PUT    /blogs/:slug/comments/:commentId/likes/:likeId
+PATCH  /blogs/:slug/comments/:commentId/likes/:likeId
+DELETE /blogs/:slug/comments/:commentId/likes/:likeId
+          ├── middlewares: [auth, perm]
+```
+
+We added the middlewares to the `index` and `destroy` routes. We also added the parameter to the blogs route as `:slug` instead of `:blogId`.
+
+### Resource API Model Configuration Parameters
+
+| Name          | Type      | Required | Description               |
+| ------------- | --------- | -------- | ------------------------- |
+| `path`        | string    | false    | The path of the resource. |
+| `handlers`    | object    | true     | The controller object.    |
+| `middlewares` | Endpoints | false    | The middlewares object.   |
+| `parameters`  | object    | false    | The parameters object.    |
+
+### Endpoints
+
+| Name      | Type   | Description        |
+| --------- | ------ | ------------------ |
+| `index`   | GET    | List all resources |
+| `show`    | GET    | Show a resource    |
+| `store`   | POST   | Create a resource  |
+| `update`  | PUT    | Update a resource  |
+| `patch`   | PATCH  | Patch a resource   |
+| `destroy` | DELETE | Delete a resource  |
+
+> Note: This resource configuration model is inspired by the [Laravel](https://laravel.com/docs/8.x/controllers#resource-controllers) PHP framework.
 
 ## Tests
 
