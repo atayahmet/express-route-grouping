@@ -1,4 +1,4 @@
-[![NPM version](https://img.shields.io/npm/v/express-route-grouping.svg)](https://www.npmjs.com/package/express-route-grouping) [![Build Status](https://travis-ci.org/atayahmet/express-route-grouping.svg?branch=main)](https://travis-ci.org/atayahmet/express-route-grouping) [![Coverage Status](https://coveralls.io/repos/github/atayahmet/express-route-grouping/badge.svg?branch=main)](https://coveralls.io/github/atayahmet/express-route-grouping?branch=main) [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org) [![Standard Version](https://img.shields.io/badge/release-standard%20version-brightgreen.svg)](https://github.com/conventional-changelog/standard-version)
+[![NPM version](https://img.shields.io/npm/v/express-route-grouping.svg)](https://www.npmjs.com/package/express-route-grouping) [![Coverage Status](https://coveralls.io/repos/github/atayahmet/express-route-grouping/badge.svg?branch=main)](https://coveralls.io/github/atayahmet/express-route-grouping?branch=main) [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org) [![Standard Version](https://img.shields.io/badge/release-standard%20version-brightgreen.svg)](https://github.com/conventional-changelog/standard-version)
 
 # Express JS Route Grouping
 
@@ -106,11 +106,11 @@ class UserController implements IResource {
 }
 
 root.group('/api', m1, m2, api => {
-  api.group('/v1', v1Auth, v1 => {
+  api.group('/v1/users', v1Auth, v1 => {
     v1.resource(new UserController());
   });
 
-  api.group('/v2', v2Auth, v2 => {
+  api.group('/v2/users', v2Auth, v2 => {
     v2.resource(new UserController());
   });
 });
@@ -158,7 +158,7 @@ root.resource({
   handlers: new UserController(),
   middlewares: {
     index: [auth],
-    delete: [auth, perm],
+    destroy: [auth, perm],
   },
   parameters: {
     blogs: 'slug',
