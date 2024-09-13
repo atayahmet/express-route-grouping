@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/atayahmet/express-route-grouping/compare/v1.1.2..v2.0.0) (2024-09-13)
+
+
+### Features
+
+* group routes and add middleware to the groups ([d876c60](https://github.com/atayahmet/express-route-grouping/commit/d876c60d7f772d8e23cecda28c45d8a15fdc2a05))
+
+## [2.0.0](https://github.com/atayahmet/express-route-grouping/compare/v1.1.2..v2.0.0) (2024-09-13)
+
+
+### Features
+
+* group routes and add middleware to the groups ([d876c60](https://github.com/atayahmet/express-route-grouping/commit/d876c60d7f772d8e23cecda28c45d8a15fdc2a05))
+
 ### [1.1.1](https://github.com/atayahmet/express-route-grouping/compare/v1.1.0..v1.1.1) (2021-11-04)
 
 
