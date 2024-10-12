@@ -16,7 +16,7 @@ import {
   RegisterCb,
   RequestMethods,
   ResourceType,
-} from './types';
+} from '../types';
 import RESOURCES from './resources';
 
 class RouteGroup {

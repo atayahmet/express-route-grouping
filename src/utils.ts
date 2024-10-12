@@ -1,4 +1,4 @@
-import { IResource, ResourceType } from './types';
+import { IResource, ResourceType } from '../types';
 import camelCase from 'lodash.camelcase';
 
 export const sanitizer = (path: string) => {

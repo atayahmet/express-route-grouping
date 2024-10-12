@@ -4,8 +4,7 @@ import {
   RequestHandler,
 } from 'express';
 
-import RouteGroup from './index';
-import RESOURCES from './resources';
+import RESOURCES from './src/resources';
 
 export type EndpointNames = keyof typeof RESOURCES;
 export type RequestMethods = 'get' | 'post' | 'put' | 'patch' | 'delete';

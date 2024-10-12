@@ -2,7 +2,7 @@ import sinon from 'sinon';
 import { NextFunction, Router } from 'express';
 
 import RouteGroup from '../src';
-import { IRouter } from '../src/types';
+import { IRouter } from '../types';
 import { BlogController, CommentController } from './fixtures';
 
 const sandbox = sinon.createSandbox();
