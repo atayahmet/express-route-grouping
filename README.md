@@ -65,6 +65,9 @@ root.group('/api', m1, m2, api => {
       res.send('Comments');
     });
   });
+  api.get('health-check', (req, res) => {
+    res.send('OK');
+  });
 });
 ```
 
