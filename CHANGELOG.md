@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.1](https://github.com/atayahmet/express-route-grouping/compare/v2.0.0..v2.0.1) (2024-10-12)
+
+
+### Bug Fixes
+
+* fixed the params type of the group method ([d5248dc](https://github.com/atayahmet/express-route-grouping/commit/d5248dcabe0b43b5ca719b93a057e446ca62ac91))
+
 ## [2.0.0](https://github.com/atayahmet/express-route-grouping/compare/v1.1.2..v2.0.0) (2024-09-13)
 
 
