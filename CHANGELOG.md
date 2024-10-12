@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.2](https://github.com/atayahmet/express-route-grouping/compare/v2.0.1..v2.0.2) (2024-10-12)
+
+
+### Bug Fixes
+
+* moved types.d.ts file to the root ([3a5bcf7](https://github.com/atayahmet/express-route-grouping/commit/3a5bcf75763dd349cae18a6b4246261a0c0fd730))
+
 ### [2.0.1](https://github.com/atayahmet/express-route-grouping/compare/v2.0.0..v2.0.1) (2024-10-12)
 
 
