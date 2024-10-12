@@ -12,7 +12,7 @@
   },
   "scripts": {
     "start": "tsdx watch",
-    "build": "tsdx build",
+    "build": "tsdx build && cp src/types.d.ts dist/types.d.ts",
     "test": "tsdx test --coverage",
     "lint": "tsdx lint",
     "prepare": "tsdx build",

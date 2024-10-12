@@ -1,10 +1,7 @@
 import {
   NextFunction,
   IRouter as IExpressRouter,
-  Request,
   RequestHandler,
-  Response,
-  Express
 } from 'express';
 
 import RouteGroup from './index';
@@ -14,12 +11,9 @@ export type EndpointNames = keyof typeof RESOURCES;
 export type RequestMethods = 'get' | 'post' | 'put' | 'patch' | 'delete';
 export type RegisterCb = (g: IRouter) => void;
 
-export type GroupArgs =
-  | [path: string, RegisterCb]
-  | [path: string, ...NextFunction[], RegisterCb]
-  | [...NextFunction[], RegisterCb]
+export type GroupArgs = [...unknown[], RegisterCb];
 
-export interface IResource  {
+export interface IResource {
   index?: RequestHandler;
   show?: RequestHandler;
   store?: RequestHandler;
@@ -38,16 +32,16 @@ export type ResourceType = {
     update?: NextFunction[];
     patch?: NextFunction[];
     destroy?: NextFunction[];
-  },
+  };
   parameters?: {
     [prop: string]: string;
-  }
+  };
 };
 
 export type IRouter = IExpressRouter & {
-  get path(): string;
+  getPath(): string;
   getRouter: () => IExpressRouter;
-  listRoutes: () => ({ method: string; path: string; })[];
+  listRoutes: () => { method: string; path: string }[];
   group: (...args: GroupArgs) => IRouter;
   resource: (ins: IResource | ResourceType) => IRouter;
 };

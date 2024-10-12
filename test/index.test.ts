@@ -24,10 +24,13 @@ describe('express-route-grouping', () => {
       // Assert
       sandbox.assert.calledOnceWithExactly(
         registerSpy,
-        sinon.match.instanceOf(RouteGroup).and(sinon.match.has('path', 'b'))
+        sinon.match.instanceOf(RouteGroup)
       );
 
       expect(result).toBeInstanceOf(RouteGroup);
+
+      const { firstArg: ins } = registerSpy.getCall(0);
+      expect(ins.getPath()).toEqual('b');
     });
 
     it('should be register nested route groups', () => {
@@ -46,10 +49,13 @@ describe('express-route-grouping', () => {
       // Assert
       sandbox.assert.calledOnceWithMatch(
         registerSpy,
-        sinon.match.instanceOf(RouteGroup).and(sinon.match.has('path', 'a/b/c'))
+        sinon.match.instanceOf(RouteGroup)
       );
 
       expect(result).toBeInstanceOf(RouteGroup);
+
+      const { firstArg: ins } = registerSpy.getCall(0);
+      expect(ins.getPath()).toEqual('a/b/c');
     });
 
     it('should be register the group without additional path', () => {
@@ -63,10 +69,13 @@ describe('express-route-grouping', () => {
       // Assert
       sandbox.assert.calledOnceWithExactly(
         registerSpy,
-        sinon.match.instanceOf(RouteGroup).and(sinon.match.has('path', ''))
+        sinon.match.instanceOf(RouteGroup)
       );
 
       expect(result).toBeInstanceOf(RouteGroup);
+
+      const { firstArg: ins } = registerSpy.getCall(0);
+      expect(ins.getPath()).toEqual('');
     });
 
     it('should be register the nested groups without additional path', () => {
@@ -97,10 +106,13 @@ describe('express-route-grouping', () => {
       // Assert
       sandbox.assert.calledOnceWithExactly(
         registerSpy,
-        sinon.match.instanceOf(RouteGroup).and(sinon.match.has('path', 'c/d'))
+        sinon.match.instanceOf(RouteGroup)
       );
 
       expect(result).toBeInstanceOf(RouteGroup);
+
+      const { firstArg: ins } = registerSpy.getCall(0);
+      expect(ins.getPath()).toEqual('c/d');
     });
   });
 
