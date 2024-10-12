@@ -36,7 +36,7 @@ class RouteGroup {
     this.middlewares = middlewares;
   }
 
-  get path() {
+  getPath() {
     return this.head;
   }
 
